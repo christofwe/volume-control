@@ -5,8 +5,6 @@
 #include <ClickEncoder.h>
 #include <TimerOne.h>
 #include <HID-Project.h>
-// for mute button w/ led
-// arduino-libraries/Keyboard
 
 #define ENCODER_CLK A0 // Change A0 to, for example, A5 if you want to use analog pin 5 instead
 #define ENCODER_DT A1
@@ -15,8 +13,7 @@
 ClickEncoder *encoder; // variable representing the rotary encoder
 int16_t last, value; // variables for current and last rotation value
 
-
-// ---- for mute button w/ led
+// BEGIN -- for mute button w/ led
 #define BUTTON_PIN A8
 #define LED_PIN A6
 
@@ -31,7 +28,7 @@ int currentLedState;
 // the following variables are unsigned longs because the time, measured in
 // milliseconds, will quickly become a bigger number than can be stored in an int.
 unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
-
+// END -- for mute button w/ led
 
 void timerIsr() {
   encoder->service();
@@ -46,9 +43,11 @@ void setup() {
   Timer1.attachInterrupt(timerIsr); 
   last = -1;
 
-  // for mute button w/ led
+  // BEGIN -- for mute button w/ led
+  Keyboard.begin();
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(LED_PIN, OUTPUT);
+  // END -- for mute button w/ led
 } 
 
 void loop() {
@@ -84,7 +83,7 @@ void loop() {
   delay(10); // Wait 10 milliseconds, we definitely don't need to detect the rotary encoder any faster than that
   // The end of the loop() function, it will start again from the beggining (the begginging of the loop function, not the whole document)
 
-  // for mute button w/ led
+  // BEGIN -- for mute button w/ led
   // read the state of the switch/button:
   currentState = digitalRead(BUTTON_PIN);
   currentLedState = digitalRead(LED_PIN);
@@ -101,11 +100,6 @@ void loop() {
     lastFlickerableState = currentState;
   }
 
-  //digitalWrite(LED_PIN, HIGH);
-  //delay(1000); 
-  //digitalWrite(LED_PIN, LOW);
-  //delay(1000); 
-
   if ((millis() - lastDebounceTime) > DEBOUNCE_DELAY) {
     // whatever the reading is at, it's been there for longer than the debounce
     // delay, so take it as the actual current state:
@@ -113,21 +107,16 @@ void loop() {
     // if the button state has changed:
     if(lastSteadyState == HIGH && currentState == LOW) {
 
-
       if (currentLedState == HIGH) {
         digitalWrite(LED_PIN, LOW);
+        // Serial.print("LED off. ");
       }
       else {
         digitalWrite(LED_PIN, HIGH);
+        // Serial.print("LED on. ");
       }
 
       Keyboard.press(KEY_LEFT_GUI);
-      Keyboard.press('1');
-      delay(100);
-      Keyboard.releaseAll();
-      delay(100);
-      // Keyboard.println("You pressed the button ");
-      Keyboard.press(KEY_LEFT_CTRL);
       Keyboard.press(KEY_LEFT_SHIFT);
       Keyboard.press('m');
       delay(100);
@@ -136,23 +125,5 @@ void loop() {
     // save the the last steady state
     lastSteadyState = currentState;
   }
-
+  // END -- for mute button w/ led
 }
-
-
-/*
-    This is just a long comment
-    Here are some fun functions you can use to replace the default behaviour 
-    Consumer.write(CONSUMER_BRIGHTNESS_UP);
-    Consumer.write(CONSUMER_BRIGHTNESS_DOWN);
-    Consumer.write(CONSUMER_BROWSER_HOME);
-    Consumer.write(CONSUMER_SCREENSAVER);
-    Consumer.write(HID_CONSUMER_AL_CALCULATOR); //launch calculator :)
-    Consumer.write(HID_CONSUMER_AC_ZOOM_IN);
-    Consumer.write(HID_CONSUMER_AC_SCROLL_UP);
-    CONSUMER_SLEEP = 0x32,
-
-    FULL LIST CAN BE FOUND HERE:
-    https://github.com/NicoHood/HID/blob/master/src/HID-APIs/ConsumerAPI.h
-*/
-        
